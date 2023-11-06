@@ -64,7 +64,7 @@ async function run() {
         })
 
         // update single food by id
-        app.put('/api/v1/updateFood/:id', async (req, res) => {
+        app.patch('/api/v1/updateFood/:id', async (req, res) => {
             console.log(req.params.id);
             const id = req.params.id;
             const newFood = req.body;
@@ -88,7 +88,13 @@ async function run() {
             res.send(result)
         })
 
-
+        // Add single food to mongodb
+        app.post('/api/v1/addFood',async(req,res)=>{
+            const food = req.body;
+            // console.log(food);
+            const result = await foodCollection.insertOne(food)
+            res.send(result)
+        })
 
 
 
