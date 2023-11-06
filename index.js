@@ -30,6 +30,32 @@ async function run() {
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+        // Collection 
+        const foodCollection = client.db('Restaurant').collection('allFoods');
+
+        app.get('/api/v1/allFoods',async(req,res)=>{
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+            // console.log(page,size);
+
+            const result = await foodCollection.find().skip(page*size).limit(size).toArray()
+            res.send(result)
+        })
+
+        // get My added foods by email
+        app.get('/api/v1/myAddedFoods',async(req,res)=>{
+            console.log(req.query.email);
+
+            let query = {}
+            if(req.query?.email){
+                query = {made_by: req.query.email}
+            }
+            const result = await foodCollection.find(query).toArray()
+            res.send(result)
+        })
+
+
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
