@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
 
@@ -34,26 +34,62 @@ async function run() {
         // Collection 
         const foodCollection = client.db('Restaurant').collection('allFoods');
 
-        app.get('/api/v1/allFoods',async(req,res)=>{
+        app.get('/api/v1/allFoods', async (req, res) => {
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
             // console.log(page,size);
 
-            const result = await foodCollection.find().skip(page*size).limit(size).toArray()
+            const result = await foodCollection.find().skip(page * size).limit(size).toArray()
             res.send(result)
         })
 
         // get My added foods by email
-        app.get('/api/v1/myAddedFoods',async(req,res)=>{
+        app.get('/api/v1/myAddedFoods', async (req, res) => {
             console.log(req.query.email);
 
             let query = {}
-            if(req.query?.email){
-                query = {made_by: req.query.email}
+            if (req.query?.email) {
+                query = { made_by: req.query.email }
             }
             const result = await foodCollection.find(query).toArray()
             res.send(result)
         })
+
+        // find specific food by id
+        app.get('/api/v1/findSingleFood/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await foodCollection.findOne(query)
+            res.send(result)
+        })
+
+        // update single food by id
+        app.put('/api/v1/updateFood/:id', async (req, res) => {
+            console.log(req.params.id);
+            const id = req.params.id;
+            const newFood = req.body;
+            console.log(newFood);
+            const filter = { _id: new ObjectId(id) }
+            // console.log(filter);
+            const updateFood = {
+                $set: {
+                    category: newFood.category,
+                    description: newFood.description,
+                    food_origin: newFood.food_origin,
+                    image: newFood.image,
+                    made_by: newFood.made_by,
+                    name: newFood.name,
+                    price: newFood.price,
+                    quantity: newFood.quantity,
+                    count: newFood.count
+                }
+            }
+            const result = await foodCollection.updateOne(filter, updateFood)
+            res.send(result)
+        })
+
+
+
 
 
     } finally {
