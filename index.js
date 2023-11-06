@@ -33,6 +33,7 @@ async function run() {
 
         // Collection 
         const foodCollection = client.db('Restaurant').collection('allFoods');
+        const orderedCollection = client.db('UserOrders').collection('orders');
 
         app.get('/api/v1/allFoods', async (req, res) => {
             const page = parseInt(req.query.page);
@@ -96,6 +97,15 @@ async function run() {
             res.send(result)
         })
 
+
+
+        // user Order collection
+        app.post('/api/v1/user-orders',async(req,res)=>{
+            const food = req.body;
+            // console.log(food);
+            const result = await orderedCollection.insertOne(food)
+            res.send(result)
+        })
 
 
     } finally {
