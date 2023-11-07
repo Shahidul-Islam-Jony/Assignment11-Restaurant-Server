@@ -1,12 +1,13 @@
 const express = require('express')
 const cors = require('cors')
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
 
-// middleWare
+// middleWares
 app.use(cors({
     origin: [
         'http://localhost:5173',
@@ -14,7 +15,22 @@ app.use(cors({
     credentials: true
 }))
 app.use(express.json())
+app.use(cookieParser())
 
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token;
+    // console.log(token);
+    if (!token) {
+        return res.status(401).send({ message: 'Unauthorized access' })
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'Unauthorized access' })
+        }
+        req.user = decoded
+        next()
+    })
+}
 
 
 
@@ -66,7 +82,6 @@ async function run() {
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
             // console.log(page,size);
-
             const result = await foodCollection.find().skip(page * size).limit(size).toArray()
             res.send(result)
         })
@@ -78,9 +93,13 @@ async function run() {
         })
 
         // get My added foods by email
-        app.get('/api/v1/myAddedFoods', async (req, res) => {
-            console.log(req.query.email);
+        app.get('/api/v1/myAddedFoods', verifyToken, async (req, res) => {
 
+            if(req.user.email !== req.query.email){
+                return res.status(403).send({message: 'Forbidden access'})
+            }
+
+            // console.log(req.query.email);
             let query = {}
             if (req.query?.email) {
                 query = { made_by: req.query.email }
@@ -141,9 +160,12 @@ async function run() {
             res.send(result)
         })
         // get user order
-        app.get('/api/v1/get-user-orders', async (req, res) => {
+        app.get('/api/v1/get-user-orders',verifyToken, async (req, res) => {
             const email = req.query.email
             // console.log(email);
+            if(req.user.email !== email){
+                return res.status(403).send({message: 'Forbidden access'})
+            }
             const query = { buyerEmail: email }
             // console.log(query);
             const result = await orderedCollection.find(query).toArray()
