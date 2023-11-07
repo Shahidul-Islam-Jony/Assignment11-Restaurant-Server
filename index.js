@@ -33,7 +33,7 @@ async function run() {
 
         // Collection 
         const foodCollection = client.db('Restaurant').collection('allFoods');
-        const orderedCollection = client.db('UserOrders').collection('orders');
+        const orderedCollection = client.db('Restaurant').collection('orders');
 
         app.get('/api/v1/allFoods', async (req, res) => {
             const page = parseInt(req.query.page);
@@ -116,6 +116,16 @@ async function run() {
             const result = await orderedCollection.find(query).toArray()
             res.send(result)
         })
+        // delete user ordered single food
+        app.delete('/api/v1/delete-user-single-food/:id',async(req,res)=>{
+            const id = req.params.id;
+            console.log(id);
+            const query = {_id: new ObjectId(id)}
+            const result = await orderedCollection.deleteOne(query)
+            console.log(result);
+            res.send(result)
+        })
+
 
 
     } finally {
