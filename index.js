@@ -1,12 +1,18 @@
 const express = require('express')
 const cors = require('cors')
+var jwt = require('jsonwebtoken');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
 
 // middleWare
-app.use(cors())
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+    ],
+    credentials: true
+}))
 app.use(express.json())
 
 
@@ -35,6 +41,27 @@ async function run() {
         const foodCollection = client.db('Restaurant').collection('allFoods');
         const orderedCollection = client.db('Restaurant').collection('orders');
 
+        // jwt token generator
+        app.post('/api/v1/jwt', async (req, res) => {
+            const userEmail = req.body;
+            console.log(userEmail);
+            const token = jwt.sign(userEmail, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
+            })
+                .send({ success: true })
+        })
+        // Clear jwt token when user logout
+        app.post('/api/v1/logout', async (req, res) => {
+            const userEmail = req.body;
+            res.clearCookie('token', { maxAge: 0 })
+                .send({ success: true })
+        })
+
+
+        // Find all food by page and size
         app.get('/api/v1/allFoods', async (req, res) => {
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
@@ -45,9 +72,9 @@ async function run() {
         })
 
         // All food count
-        app.get('/api/v1/totalFood',async(req,res)=>{
+        app.get('/api/v1/totalFood', async (req, res) => {
             const count = await foodCollection.estimatedDocumentCount()
-            res.send({count})
+            res.send({ count })
         })
 
         // get My added foods by email
@@ -123,10 +150,10 @@ async function run() {
             res.send(result)
         })
         // delete user ordered single food
-        app.delete('/api/v1/delete-user-single-food/:id',async(req,res)=>{
+        app.delete('/api/v1/delete-user-single-food/:id', async (req, res) => {
             const id = req.params.id;
             console.log(id);
-            const query = {_id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await orderedCollection.deleteOne(query)
             console.log(result);
             res.send(result)
