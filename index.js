@@ -44,6 +44,12 @@ async function run() {
             res.send(result)
         })
 
+        // All food count
+        app.get('/api/v1/totalFood',async(req,res)=>{
+            const count = await foodCollection.estimatedDocumentCount()
+            res.send({count})
+        })
+
         // get My added foods by email
         app.get('/api/v1/myAddedFoods', async (req, res) => {
             console.log(req.query.email);
