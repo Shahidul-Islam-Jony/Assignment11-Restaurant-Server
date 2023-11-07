@@ -19,7 +19,7 @@ app.use(cookieParser())
 
 const verifyToken = (req, res, next) => {
     const token = req?.cookies?.token;
-    // console.log(token);
+    console.log(token);
     if (!token) {
         return res.status(401).send({ message: 'Unauthorized access' })
     }
@@ -95,8 +95,8 @@ async function run() {
         // get My added foods by email
         app.get('/api/v1/myAddedFoods', verifyToken, async (req, res) => {
 
-            if(req.user.email !== req.query.email){
-                return res.status(403).send({message: 'Forbidden access'})
+            if (req.user.email !== req.query.email) {
+                return res.status(403).send({ message: 'Forbidden access' })
             }
 
             // console.log(req.query.email);
@@ -150,6 +150,21 @@ async function run() {
         })
 
 
+        // Sorted food by count
+        app.get('/api/v1/sorted-food',async(req,res)=>{
+            const allFood = await foodCollection.find().toArray()
+            // res.send(allFood)
+            let sortedFood = allFood.sort(function(a,b){
+                return a.count - b.count
+            })
+            sortedFood.reverse()
+            let result=[]
+            for(let i=0; i<6; i++){
+                result.push(sortedFood[i])
+                // console.log(i);
+            }
+            res.send(result)
+        })
 
         // user Order collection
         //Post user order
@@ -160,11 +175,11 @@ async function run() {
             res.send(result)
         })
         // get user order
-        app.get('/api/v1/get-user-orders',verifyToken, async (req, res) => {
+        app.get('/api/v1/get-user-orders', verifyToken, async (req, res) => {
             const email = req.query.email
             // console.log(email);
-            if(req.user.email !== email){
-                return res.status(403).send({message: 'Forbidden access'})
+            if (req.user.email !== email) {
+                return res.status(403).send({ message: 'Forbidden access' })
             }
             const query = { buyerEmail: email }
             // console.log(query);
