@@ -90,7 +90,7 @@ async function run() {
         })
 
         // Add single food to mongodb
-        app.post('/api/v1/addFood',async(req,res)=>{
+        app.post('/api/v1/addFood', async (req, res) => {
             const food = req.body;
             // console.log(food);
             const result = await foodCollection.insertOne(food)
@@ -100,10 +100,20 @@ async function run() {
 
 
         // user Order collection
-        app.post('/api/v1/user-orders',async(req,res)=>{
+        //Post user order
+        app.post('/api/v1/user-orders', async (req, res) => {
             const food = req.body;
             // console.log(food);
             const result = await orderedCollection.insertOne(food)
+            res.send(result)
+        })
+        // get user order
+        app.get('/api/v1/get-user-orders', async (req, res) => {
+            const email = req.query.email
+            // console.log(email);
+            const query = { buyerEmail: email }
+            // console.log(query);
+            const result = await orderedCollection.find(query).toArray()
             res.send(result)
         })
 
